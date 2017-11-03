@@ -230,6 +230,9 @@ class MCP2515
             CANINTF_MERRF = 0x80
         };
 
+        typedef void (*platform_delay_func)(unsigned long milliseconds);
+        typedef unsigned long  (*platform_millis_func)(void);
+
     private:
         static const uint8_t CANCTRL_REQOP = 0xE0;
         static const uint8_t CANCTRL_ABAT = 0x10;
@@ -417,6 +420,8 @@ class MCP2515
         } RXB[N_RXBUFFERS];
 
         uint8_t SPICS;
+        platform_delay_func platform_delay;
+        platform_millis_func platform_millis;
 
     private:
 
@@ -432,9 +437,12 @@ class MCP2515
         void modifyRegister(const REGISTER reg, const uint8_t mask, const uint8_t data);
 
         void prepareId(uint8_t *buffer, const bool ext, const uint32_t id);
-    
+
     public:
-        MCP2515(const uint8_t _CS);
+        MCP2515(const uint8_t _CS,
+                platform_delay_func _platform_delay_ms = delay,
+                platform_millis_func _platform_millis = millis);
+
         ERROR reset(void);
         ERROR setConfigMode();
         ERROR setListenOnlyMode();
