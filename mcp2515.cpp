@@ -11,10 +11,12 @@ const struct MCP2515::RXBn_REGS MCP2515::RXB[N_RXBUFFERS] = {
     {MCP_RXB1CTRL, MCP_RXB1SIDH, MCP_RXB1DATA, CANINTF_RX1IF}
 };
 
-MCP2515::MCP2515(const uint8_t _CS)
+MCP2515::MCP2515(const uint8_t _CS, platform_delay_ms_func _platform_delay_ms,
+                 platform_millis_func _platform_millis)
 {
+    platform_delay_ms = _platform_delay_ms;
+    platform_millis = _platform_millis;
     SPI.begin();
-
     SPICS = _CS;
     pinMode(SPICS, OUTPUT);
     endSPI();
@@ -36,7 +38,7 @@ MCP2515::ERROR MCP2515::reset(void)
     SPI.transfer(INSTRUCTION_RESET);
     endSPI();
 
-    delay(10);
+    platform_delay_ms(10);
 
     uint8_t zeros[14];
     memset(zeros, 0, sizeof(zeros));
@@ -166,9 +168,9 @@ MCP2515::ERROR MCP2515::setMode(const CANCTRL_REQOP_MODE mode)
 {
     modifyRegister(MCP_CANCTRL, CANCTRL_REQOP, mode);
 
-    unsigned long endTime = millis() + 10;
+    unsigned long endTime = platform_millis() + 10;
     bool modeMatch = false;
-    while (millis() < endTime) {
+    while (platform_millis() < endTime) {
         uint8_t newmode = readRegister(MCP_CANSTAT);
         newmode &= CANSTAT_OPMOD;
 
@@ -484,7 +486,7 @@ MCP2515::ERROR MCP2515::setFilterMask(const MASK mask, const bool ext, const uin
     if (res != ERROR_OK) {
         return res;
     }
-    
+
     uint8_t tbufdata[4];
     prepareId(tbufdata, ext, ulData);
 
@@ -497,7 +499,7 @@ MCP2515::ERROR MCP2515::setFilterMask(const MASK mask, const bool ext, const uin
     }
 
     setRegisters(reg, tbufdata, 4);
-    
+
     return ERROR_OK;
 }
 
@@ -682,7 +684,7 @@ void MCP2515::clearRXnOVR(void)
 		clearInterrupts();
 		//modifyRegister(MCP_CANINTF, CANINTF_ERRIF, 0);
 	}
-	
+
 }
 
 void MCP2515::clearMERR()
