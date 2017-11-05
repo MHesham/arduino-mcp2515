@@ -440,8 +440,9 @@ class MCP2515
 
     public:
         MCP2515(const uint8_t _CS,
-                platform_delay_func _platform_delay_ms = delay,
-                platform_millis_func _platform_millis = millis);
+
+        platform_delay_func _platform_delay_ms = delay,
+        platform_millis_func _platform_millis = millis);
 
         ERROR reset(void);
         ERROR setConfigMode();
